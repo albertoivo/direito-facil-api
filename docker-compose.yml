@@ -4,7 +4,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/crud-oauth
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/direito-facil
       - SECRET_KEY=supersecretkey
       - JWT_SECRET_KEY=supersecretkey
       - ALGORITHM=HS256
@@ -20,7 +20,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=crud-oauth
+      - POSTGRES_DB=direito-facil
     ports:
       - "5432:5432"
     volumes:
