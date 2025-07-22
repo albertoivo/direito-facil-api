@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise SWOT: Fine-tuning vs RAG</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .option {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 25px;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            border-color: #3498db;
+        }
+        
+        .option h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .icon {
+            font-size: 1.2em;
+        }
+        
+        .swot-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .swot-item {
+            padding: 20px;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .swot-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--accent-color);
+        }
+        
+        .strengths {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            --accent-color: #28a745;
+        }
+        
+        .weaknesses {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            --accent-color: #dc3545;
+        }
+        
+        .opportunities {
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+            --accent-color: #17a2b8;
+        }
+        
+        .threats {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            --accent-color: #ffc107;
+        }
+        
+        .swot-item h3 {
+            margin: 0 0 15px 0;
+            font-size: 1.1em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .swot-item ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .swot-item li {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        
+        .recommendation {
+            margin-top: 40px;
+            padding: 25px;
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+            border-radius: 15px;
+            border-left: 5px solid #28a745;
+        }
+        
+        .recommendation h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 30px 0;
+            font-size: 0.9em;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border-radius: 5px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        @media (max-width: 768px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            .swot-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .legend {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Análise SWOT 📊</h1>
+        <p class="subtitle">Fine-tuning vs RAG para Chatbot Jurídico</p>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #d4edda, #c3e6cb);"></div>
+                <span><strong>Forças</strong> (Strengths)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #f8d7da, #f5c6cb);"></div>
+                <span><strong>Fraquezas</strong> (Weaknesses)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #d1ecf1, #bee5eb);"></div>
+                <span><strong>Oportunidades</strong> (Opportunities)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #fff3cd, #ffeaa7);"></div>
+                <span><strong>Ameaças</strong> (Threats)</span>
+            </div>
+        </div>
+        
+        <div class="comparison">
+            <!-- OPÇÃO 1: FINE-TUNING -->
+            <div class="option">
+                <h2>
+                    <span class="icon">🎯</span>
+                    Opção 1: Fine-tuning
+                </h2>
+                <p><strong>Abordagem:</strong> Retreinar modelo pré-existente com dados jurídicos brasileiros</p>
+                
+                <div class="swot-grid">
+                    <div class="swot-item strengths">
+                        <h3>✅ Forças</h3>
+                        <ul>
+                            <li>Alta especialização no domínio jurídico</li>
+                            <li>Respostas mais precisas e técnicas</li>
+                            <li>Melhor compreensão de jargão legal</li>
+                            <li>Modelo "aprende" realmente as leis</li>
+                            <li>Menor dependência de bases externas</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="swot-item weaknesses">
+                        <h3>❌ Fraquezas</h3>
+                        <ul>
+                            <li>Requer grande volume de dados rotulados</li>
+                            <li>Processo demorado (semanas/meses)</li>
+                            <li>Alto custo computacional</li>
+                            <li>Conhecimento limitado à data do treino</li>
+                            <li>Difícil de atualizar com novas leis</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="swot-item opportunities">
+                        <h3>🚀 Oportunidades</h3>
+                        <ul>
+                            <li>Modelo único no mercado brasileiro</li>
+                            <li>Potencial de licenciamento</li>
+                            <li>Publicação acadêmica de alto impacto</li>
+                            <li>Parcerias com tribunais e universidades</li>
+                            <li>Base para outros domínios legais</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="swot-item threats">
+                        <h3>⚠️ Ameaças</h3>
+                        <ul>
+                            <li>Mudanças frequentes na legislação</li>
+                            <li>Risco de overfitting</li>
+                            <li>Competição com big techs</li>
+                            <li>Regulamentações sobre IA jurídica</li>
+                            <li>Viés nos dados de treinamento</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- OPÇÃO 2: RAG -->
+            <div class="option">
+                <h2>
+                    <span class="icon">🔍</span>
+                    Opção 2: RAG
+                </h2>
+                <p><strong>Abordagem:</strong> Buscar informações relevantes e usar LLM genérico para gerar respostas</p>
+                
+                <div class="swot-grid">
+                    <div class="swot-item strengths">
+                        <h3>✅ Forças</h3>
+                        <ul>
+                            <li>Implementação rápida (dias/semanas)</li>
+                            <li>Fácil atualização da base legal</li>
+                            <li>Transparência nas fontes</li>
+                            <li>Menor custo computacional</li>
+                            <li>Flexibilidade para múltiplos domínios</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="swot-item weaknesses">
+                        <h3>❌ Fraquezas</h3>
+                        <ul>
+                            <li>Dependente da qualidade da busca</li>
+                            <li>Menor precisão técnica</li>
+                            <li>Latência por consultas externas</li>
+                            <li>Limitado pela base de documentos</li>
+                            <li>Possível inconsistência nas respostas</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="swot-item opportunities">
+                        <h3>🚀 Oportunidades</h3>
+                        <ul>
+                            <li>MVP rápido para validação</li>
+                            <li>Integração com APIs governamentais</li>
+                            <li>Escalabilidade para outras áreas</li>
+                            <li>Parcerias com provedores de dados</li>
+                            <li>Modelo híbrido futuro</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="swot-item threats">
+                        <h3>⚠️ Ameaças</h3>
+                        <ul>
+                            <li>Dependência de APIs de terceiros</li>
+                            <li>Custos crescentes com volume</li>
+                            <li>Limitações de rate limit</li>
+                            <li>Concorrência com soluções similares</li>
+                            <li>Mudanças nos modelos base</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="recommendation">
+            <h3>
+                <span>💡</span>
+                Minha estratégica
+            </h3>
+            <p><strong>Para prototipagem rápida:</strong></p>
+            <p>
+                <strong>Vou Começar com RAG</strong> para validar o conceito e gerar resultados iniciais rapidamente. 
+                Isso permite focar na pesquisa de usabilidade e aceitação dos usuários. 
+                <strong>Posteriormente, penso em evoluir para Fine-tuning</strong> como diferencial competitivo e contribuição acadêmica.
+            </p>
+            <p>
+                <strong>Estratégia híbrida:</strong> Usar RAG para questões gerais e Fine-tuning para especialidades específicas  (ex: direito do consumidor, trabalhista, etc.).
+            </p>
+        </div>
+    </div>
+</body>
+</html>
