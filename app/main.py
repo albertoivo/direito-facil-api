@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.config.logging import setup_logging
 from app.database import get_db
-from app.routers import auth, users
+from app.routers import auth, questions, users
 
 from .middleware.rate_limit import _rate_limit_exceeded_handler, limiter
 
@@ -22,8 +22,8 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 app = FastAPI(
-    title="CRUD OAuth API",
-    description="API para templates de CRUD com autenticação OAuth2",
+    title="Direito Fácil API",
+    description="API para o chatbot para atendimento jurídico automatizado de baixa complexidade",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -32,12 +32,14 @@ app = FastAPI(
         {"name": "Users", "description": "Gerenciamento de usuários"},
         {"name": "Home", "description": "Página inicial da API"},
         {"name": "Health Check", "description": "Verificação de saúde da API"},
+        {"name": "Doubts", "description": "Dúvidas dos usuários"},
     ],
 )
 
 # Incluir routers
 app.include_router(users.router)
 app.include_router(auth.router)
+app.include_router(questions.router)
 
 app.add_middleware(
     CORSMiddleware,

@@ -19,7 +19,7 @@ class UserUpdate(BaseModel):
     nome: Optional[str] = Field(None, min_length=1, max_length=100)
     email: Optional[str] = Field(None, pattern=r"^[^@]+@[^@]+\.[^@]+$")
     password: Optional[str] = Field(None, min_length=6)
-    role: Optional[str] = Field(None, pattern=r"^(user|admin)$")
+    role: Optional[str] = Field(None, pattern=r"^(user|lawyer|student|admin)$")
 
     @field_validator("nome")
     def nome_not_empty(cls, v):

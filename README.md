@@ -1,6 +1,12 @@
-# CRUD OAuth API Backend
+# Direito Fácil API
 
-Este é um projeto de backend robusto construído com FastAPI, projetado para servir como um template para aplicações que necessitam de operações CRUD (Criar, Ler, Atualizar, Deletar) com autenticação de usuário via JWT (JSON Web Tokens).
+Chatbot de Inteligência Artificial para Atendimento Jurídico Automatizado de Baixa Complexidade.
+
+## 💪 Motivação
+
+A população brasileira enfrenta dificuldade no acesso à informações jurídicas básicas, especialmente em temas como negativação indevida, cancelamento de serviços, pequenas causas, contratos e direitos do consumidor. Muitos desses casos não exigem atendimento jurídico especializado, mas sim orientação acessível e clara. Defensorias Públicas e serviços de apoio jurídico estão sobrecarregados, enquanto a tecnologia de IA aplicada ao Direito ainda é pouco explorada para este fim.
+
+---
 
 ## ✨ Features
 
@@ -33,8 +39,8 @@ Esta é a forma mais fácil de subir todo o ambiente, incluindo o banco de dados
 
 1.  **Clone o repositório:**
     ```sh
-    git clone https://github.com/albertoivo/crud-oauth_api.git
-    cd crud-oauth_api
+    git clone https://github.com/albertoivo/direito-facil-api.git
+    cd direito-facil-api
     ```
 
 2.  **Inicie os containers:**
@@ -53,8 +59,8 @@ Siga estes passos se preferir configurar o ambiente localmente sem o Docker.
 
 1.  **Clone o repositório:**
     ```sh
-    git clone https://github.com/albertoivo/crud-oauth_api.git
-    cd crud-oauth_api
+    git clone https://github.com/albertoivo/direito-facil-api.git
+    cd direito-facil-api
     ```
 
 2.  **Crie e ative um ambiente virtual:**
@@ -79,7 +85,7 @@ Siga estes passos se preferir configurar o ambiente localmente sem o Docker.
 
     ```env
     # Conteúdo para o arquivo .env
-    DATABASE_URL="postgresql://postgres:postgres@localhost:5432/crud-oauth"
+    DATABASE_URL="postgresql://postgres:postgres@localhost:5432/direito-facil"
     SECRET_KEY="uma-chave-secreta-muito-forte"
     ALGORITHM="HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES=60
