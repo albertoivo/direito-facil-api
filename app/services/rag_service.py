@@ -89,7 +89,8 @@ class RAGService:
             context_parts = []
             sources = []
 
-            for doc in relevant_docs:
+            # Número de documentos enviados para o LLM para procurar respostas. Quantos menor, menos custo.
+            for doc in relevant_docs[:3]:
                 context_parts.append(
                     f"FONTE: {doc['title']}\nCONTEÚDO: {doc['content']}\n"
                 )
