@@ -16,3 +16,6 @@ pytest-env
 httpx
 isort
 bcrypt
+chromadb
+sentence_transformers
+openai
