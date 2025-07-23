@@ -1,9 +1,9 @@
-from datetime import datetime
-import uuid
-from typing import Optional
 import logging
-from .rag_service import RAGService
+import uuid
+from datetime import datetime
+from typing import Optional
 
+from .rag_service import RAGService
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class KnowledgeBaseService:
         """
         try:
             doc_id = str(uuid.uuid4())
-            
+
             # Gerar embedding
             embedding = self.rag_service.embedding_model.encode([content])[0].tolist()
 

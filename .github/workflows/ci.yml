@@ -46,17 +46,17 @@ jobs:
           pip install pytest flake8 black
           pip install -r requirements.txt
 
-      # Boa prática: Reativar linters para garantir a qualidade do código
+      # Linters para garantir a qualidade do código
       - name: Rodar Lint (Flake8)
         run: |
           # --count mostra o número de erros; --select ignora alguns erros; --max-complexity e --max-line-length são boas práticas
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      # - name: Verificar formatação (Black)
-      #   run: |
-      #     black --check .
-
-      - name: Rodar testes (Pytest)
+      - name: Verificar formatação (Black)
         run: |
-          pytest tests/ -v
+          black --check .
+
+      # - name: Rodar testes (Pytest)
+      #   run: |
+      #     pytest tests/ -v

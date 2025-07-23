@@ -1,12 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.services.auth_service import AuthService
-from app.services.rag_service import RAGService
+from app.schemas.legal_response import (DocumentUpload, LegalQuery,
+                                        LegalResponse)
 from app.services.knowledge_base import KnowledgeBaseService
-from app.schemas.question import Question
-from app.schemas.legal_response import LegalResponse, LegalQuery, DocumentUpload
+from app.services.rag_service import RAGService
 
 router = APIRouter(tags=["Doubts"])
 

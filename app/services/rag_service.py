@@ -1,13 +1,12 @@
-import os
-import chromadb
-from sentence_transformers import SentenceTransformer
-from openai import OpenAI
-from typing import List, Dict, Any
-import uuid
 import logging
-from datetime import datetime
-from app.schemas.legal_response import LegalResponse, LegalQuery
+from typing import Dict, List
+
+import chromadb
 from dotenv import load_dotenv
+from openai import OpenAI
+from sentence_transformers import SentenceTransformer
+
+from app.schemas.legal_response import LegalQuery, LegalResponse
 
 load_dotenv()  # carrega o .env
 logger = logging.getLogger(__name__)
@@ -203,5 +202,4 @@ class RAGService:
         """
         Log das consultas para análise posterior
         """
-        # Implementar logging no banco se necessário
-        pass
+        # Implementar logging
