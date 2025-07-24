@@ -136,6 +136,7 @@ class RAGService:
                     {"role": "user", "content": user_prompt},
                 ],
                 temperature=0.3,  # Baixa criatividade para precisão
+                top_p=0.9,
                 max_tokens=800,
             )
 
