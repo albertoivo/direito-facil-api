@@ -11,7 +11,7 @@ A população brasileira enfrenta dificuldade no acesso à informações jurídi
 ## ✨ Features
 
 - **Framework Moderno:** Construído com [FastAPI](https://fastapi.tiangolo.com/) para alta performance.
-- **Banco de Dados:** Utiliza [SQLAlchemy](https://www.sqlalchemy.org/) como ORM para interagir com o banco de dados PostgreSQL.
+- **Banco de Dados:** Utiliza [SQLAlchemy](https://www.sqlalchemy.org/) como ORM para interagir com o banco de dados PostgreSQL para os usuários e ChromaDB para base de conhecimento vetorizada.
 - **Autenticação Segura:** Implementa autenticação e autorização usando JWT.
 - **Containerização:** Configuração completa com [Docker](https://www.docker.com/) e [Docker Compose](https://docs.docker.com/compose/) para um ambiente de desenvolvimento e produção consistente.
 - **Testes:** Suíte de testes configurada com [Pytest](https://pytest.org/).
