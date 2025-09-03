@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 
 from app.database import get_db
 from app.schemas.legal_response import (DocumentUpload, LegalQuery,
@@ -72,12 +73,49 @@ async def get_legal_categories():
 
 
 @router.get("/health-ai")
-async def health_check():
+async def health_check(db: Session = Depends(get_db)):
     """
-    Verificar saúde dos serviços
+    Verificar saúde dos serviços de IA e banco de dados.
     """
-    return {
-        "database": "ok",
-        "vector_store": await rag_service.health_check(),
-        "llm_service": "ok",
+    health_status = {
+        "database": {"status": "ok", "details": "Conexão bem-sucedida"},
+        "vector_store": {"status": "ok", "details": "Serviço disponível"},
+        "llm_service": {"status": "ok", "details": "Serviço disponível"},
     }
+
+    # 1. Verificar a conexão com o banco de dados
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception as e:
+        health_status["database"]["status"] = "error"
+        health_status["database"]["details"] = f"Falha na conexão: {str(e)}"
+
+    # 2. Verificar o Vector Store
+    try:
+        vector_store_status = await rag_service.health_check()
+        if vector_store_status != "ok":
+             health_status["vector_store"]["status"] = "degraded"
+             health_status["vector_store"]["details"] = vector_store_status
+    except Exception as e:
+        health_status["vector_store"]["status"] = "error"
+        health_status["vector_store"]["details"] = f"Serviço indisponível: {str(e)}"
+
+    # 3. Verificar o serviço de LLM
+    try:
+        llm_status = await rag_service.check_llm_status()
+        if not llm_status:
+            health_status["llm_service"]["status"] = "error"
+            health_status["llm_service"]["details"] = "LLM não respondeu corretamente."
+
+    except Exception as e:
+        health_status["llm_service"]["status"] = "error"
+        health_status["llm_service"]["details"] = f"Serviço indisponível: {str(e)}"
+
+    # Verifica se algum serviço falhou para retornar o status code apropriado
+    if any(service["status"] == "error" for service in health_status.values()):
+        raise HTTPException(
+            status_code=503,
+            detail=health_status
+        )
+
+    return health_status

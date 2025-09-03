@@ -204,3 +204,17 @@ class RAGService:
         Log das consultas para análise posterior
         """
         # Implementar logging
+
+    async def check_llm_status():
+        """
+        Verificar se o serviço LLM está disponível
+        """
+        try:
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "system", "content": "Teste de disponibilidade"}],
+            )
+            return response is not None
+        except Exception as e:
+            logger.error(f"Erro ao verificar status do LLM: {e}")
+            return False
