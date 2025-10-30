@@ -6,6 +6,7 @@ psycopg2-binary
 redis
 alembic
 python-dotenv
+pydantic-settings
 PyJWT
 black
 flake8
@@ -13,9 +14,9 @@ autoflake8
 pytest
 pytest-asyncio
 pytest-env
+pytest-mock
 httpx
 isort
 bcrypt
 chromadb
-sentence_transformers
 openai
