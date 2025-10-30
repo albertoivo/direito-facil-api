@@ -1,12 +1,15 @@
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
+import hashlib
 
 import chromadb
 from dotenv import load_dotenv
 from openai import OpenAI
-from sentence_transformers import SentenceTransformer
 
 from app.schemas.legal_response import LegalQuery, LegalResponse
+from app.config.settings import settings
+from app.services.prompt_builder import PromptBuilder, ComplexityLevel
+from app.services.response_validator import ResponseValidator
 
 load_dotenv()  # carrega o .env
 logger = logging.getLogger(__name__)
@@ -19,15 +22,89 @@ client = OpenAI()
 class RAGService:
     def __init__(self):
         # Configurar ChromaDB para armazenar vetores
-        self.chroma_client = chromadb.PersistentClient(path="./chroma_db")
+        self.chroma_client = chromadb.PersistentClient(path=settings.chroma_path)
         self.collection = self.chroma_client.get_or_create_collection(
-            name="legal_knowledge", metadata={"hnsw:space": "cosine"}
+            name=settings.chroma_collection_name, 
+            metadata={"hnsw:space": "cosine"}
         )
 
-        # Modelo de embedding em português
-        self.embedding_model = SentenceTransformer(
-            "neuralmind/bert-base-portuguese-cased"
-        )
+        # Cache de embeddings
+        self._embedding_cache: Dict[str, List[float]] = {}
+        self._cache_enabled = settings.enable_embedding_cache
+        self._cache_max_size = settings.embedding_cache_size
+        
+        # Prompt builder
+        self.prompt_builder = PromptBuilder()
+    
+    def _get_cache_key(self, text: str) -> str:
+        """
+        Gerar chave única para cache de embeddings
+        
+        Args:
+            text: Texto para gerar a chave
+            
+        Returns:
+            Hash MD5 do texto
+        """
+        return hashlib.md5(text.encode('utf-8')).hexdigest()
+    
+    def _get_embedding(self, text: str) -> List[float]:
+        """
+        Gerar embedding usando OpenAI com cache
+        
+        Args:
+            text: Texto para gerar embedding
+            
+        Returns:
+            Lista de floats representando o embedding
+        """
+        # Verificar cache
+        if self._cache_enabled:
+            cache_key = self._get_cache_key(text)
+            
+            if cache_key in self._embedding_cache:
+                logger.info(f"Cache hit para embedding: {text[:50]}...")
+                return self._embedding_cache[cache_key]
+        
+        try:
+            # Gerar embedding via OpenAI
+            response = client.embeddings.create(
+                model=settings.embedding_model,
+                input=text
+            )
+            embedding = response.data[0].embedding
+            
+            # Armazenar no cache
+            if self._cache_enabled:
+                # Limitar tamanho do cache (FIFO simples)
+                if len(self._embedding_cache) >= self._cache_max_size:
+                    # Remove o primeiro item
+                    first_key = next(iter(self._embedding_cache))
+                    del self._embedding_cache[first_key]
+                    logger.debug(f"Cache cheio, removendo entrada antiga")
+                
+                self._embedding_cache[cache_key] = embedding
+                logger.debug(f"Embedding armazenado no cache. Tamanho: {len(self._embedding_cache)}")
+            
+            return embedding
+            
+        except Exception as e:
+            logger.error(f"Erro ao gerar embedding: {e}")
+            raise
+    
+    def clear_embedding_cache(self):
+        """Limpar cache de embeddings"""
+        self._embedding_cache.clear()
+        logger.info("Cache de embeddings limpo")
+    
+    def get_cache_stats(self) -> Dict:
+        """Obter estatísticas do cache"""
+        return {
+            "enabled": self._cache_enabled,
+            "current_size": len(self._embedding_cache),
+            "max_size": self._cache_max_size,
+            "usage_percent": (len(self._embedding_cache) / self._cache_max_size * 100) if self._cache_max_size > 0 else 0
+        }
 
     async def search_relevant_documents(
         self, query: str, category: str = None, top_k: int = 5
@@ -36,8 +113,8 @@ class RAGService:
         Buscar documentos mais relevantes para a query
         """
         try:
-            # Gerar embedding da pergunta
-            query_embedding = self.embedding_model.encode([query])[0].tolist()
+            # Gerar embedding da pergunta usando cache
+            query_embedding = self._get_embedding(query)
 
             # Filtros opcionais
             where_filter = {}
@@ -78,18 +155,29 @@ class RAGService:
             return []
 
     async def generate_legal_response(
-        self, question: str, relevant_docs: List[Dict], user_context: str = None
+        self, 
+        question: str, 
+        relevant_docs: List[Dict], 
+        user_context: Optional[str] = None,
+        complexity: ComplexityLevel = ComplexityLevel.SIMPLE
     ) -> LegalResponse:
         """
         Gerar resposta usando LLM baseado nos documentos encontrados
+        
+        Args:
+            question: Pergunta do usuário
+            relevant_docs: Documentos relevantes encontrados
+            user_context: Contexto adicional do usuário
+            complexity: Nível de complexidade da resposta
         """
         try:
             # Construir contexto com documentos relevantes
             context_parts = []
             sources = []
 
-            # Número de documentos enviados para o LLM para procurar respostas. Quanto menor, menos custo.
-            for doc in relevant_docs[:3]:
+            # Número de documentos enviados para o LLM (configurável via settings)
+            max_docs = settings.max_context_documents
+            for doc in relevant_docs[:max_docs]:
                 context_parts.append(
                     f"FONTE: {doc['title']}\nCONTEÚDO: {doc['content']}\n"
                 )
@@ -103,41 +191,24 @@ class RAGService:
 
             context = "\n---\n".join(context_parts)
 
-            # Prompt especializado para questões jurídicas
-            system_prompt = """
-            Você é um assistente jurídico especializado em direito brasileiro. 
-            Sua função é fornecer informações claras e acessíveis sobre questões legais básicas.
-            
-            DIRETRIZES IMPORTANTES:
-            1. Use linguagem simples e acessível
-            2. Base suas respostas APENAS nas fontes fornecidas
-            3. Sempre inclua um disclaimer sobre buscar ajuda profissional
-            4. Se não souber ou as fontes não forem suficientes, seja honesto
-            5. Organize a resposta de forma didática
-            6. Cite as leis/artigos relevantes quando aplicável
-            """
-
-            user_prompt = f"""
-            PERGUNTA DO USUÁRIO: {question}
-            
-            {f"CONTEXTO DO USUÁRIO: {user_context}" if user_context else ""}
-            
-            FONTES JURÍDICAS DISPONÍVEIS:
-            {context}
-            
-            Por favor, forneça uma resposta clara e objetiva baseada nas fontes acima.
-            """
+            # Usar o prompt builder para gerar prompts dinâmicos
+            system_prompt = self.prompt_builder.build_system_prompt(complexity)
+            user_prompt = self.prompt_builder.build_user_prompt(
+                question=question,
+                context=context,
+                user_context=user_context
+            )
 
             # Chamar OpenAI
             response = client.chat.completions.create(
-                model="gpt-4.1-nano",
+                model=settings.llm_model,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
-                temperature=0.3,  # Baixa criatividade para precisão
-                top_p=0.9,
-                max_tokens=800,
+                temperature=settings.llm_temperature,
+                top_p=settings.llm_top_p,
+                max_tokens=settings.llm_max_tokens,
             )
 
             answer = response.choices[0].message.content
@@ -146,20 +217,43 @@ class RAGService:
             avg_relevance = sum(doc["relevance_score"] for doc in relevant_docs) / len(
                 relevant_docs
             )
-            confidence_score = min(
-                avg_relevance * 100, 95
-            )  # Max 95% para questões legais
+            initial_confidence = min(avg_relevance * 100, 95)
+            
+            # ✅ VALIDAR se a resposta usa as fontes fornecidas
+            adjusted_confidence, validation_details = ResponseValidator.validate_and_score(
+                response=answer,
+                sources=sources,
+                original_confidence=initial_confidence
+            )
+            
+            # Log de validação
+            logger.info(f"Validação da resposta: {validation_details['validation_message']}")
+            logger.info(f"Fontes citadas: {validation_details['cited_sources_count']}")
+            logger.info(f"Confiança ajustada: {initial_confidence:.2f} → {adjusted_confidence:.2f}")
+            
+            if validation_details['hallucination_indicators']:
+                logger.warning(f"Indicadores de alucinação: {validation_details['hallucination_indicators']}")
 
             # Determinar categoria predominante
             categories = [doc["category"] for doc in relevant_docs]
             main_category = max(set(categories), key=categories.count)
+            
+            # Usar disclaimer apropriado baseado na categoria
+            category_map = {
+                "Direito do Consumidor": "consumidor",
+                "Direito Trabalhista": "trabalhista",
+                "Direito de Família": "familia",
+                "Direito Previdenciário": "previdenciario"
+            }
+            disclaimer_type = category_map.get(main_category, "geral")
+            disclaimer = self.prompt_builder.get_disclaimer(disclaimer_type)
 
             return LegalResponse(
                 answer=answer,
                 sources=sources,
-                confidence_score=confidence_score,
+                confidence_score=adjusted_confidence,
                 category=main_category,
-                disclaimer="Esta informação tem caráter orientativo. Para questões específicas, consulte um advogado.",
+                disclaimer=disclaimer,
             )
 
         except Exception as e:
@@ -205,15 +299,20 @@ class RAGService:
         """
         # Implementar logging
 
-    async def check_llm_status():
+    async def check_llm_status(self) -> bool:
         """
         Verificar se o serviço LLM está disponível
         """
         try:
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model=settings.llm_model,
                 messages=[{"role": "system", "content": "Teste de disponibilidade"}],
+                max_tokens=1
             )
+            return response is not None
+        except Exception as e:
+            logger.error(f"Erro ao verificar status do LLM: {e}")
+            return False
             return response is not None
         except Exception as e:
             logger.error(f"Erro ao verificar status do LLM: {e}")

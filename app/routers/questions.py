@@ -18,6 +18,13 @@ knowledge_service = KnowledgeBaseService()
 async def ask_legal_question(query: LegalQuery, db: Session = Depends(get_db)):
     """
     Endpoint principal para perguntas jurídicas
+    
+    Args:
+        query: Pergunta jurídica com contexto e nível de complexidade
+        db: Sessão do banco de dados
+        
+    Returns:
+        Resposta jurídica gerada com fontes e disclaimer
     """
     try:
         # 1. Buscar documentos relevantes
@@ -31,11 +38,12 @@ async def ask_legal_question(query: LegalQuery, db: Session = Depends(get_db)):
                 detail="Não encontrei informações relevantes para sua pergunta",
             )
 
-        # 2. Gerar resposta usando LLM
+        # 2. Gerar resposta usando LLM com complexidade especificada
         response = await rag_service.generate_legal_response(
             question=query.question,
             relevant_docs=relevant_docs,
             user_context=query.user_context,
+            complexity=query.complexity
         )
 
         # 3. Log da consulta para análise

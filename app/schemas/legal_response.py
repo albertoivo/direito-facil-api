@@ -1,7 +1,16 @@
 from datetime import datetime
 from typing import List, Optional
+from enum import Enum
 
 from pydantic import BaseModel, Field
+
+
+class ComplexityLevel(str, Enum):
+    """Níveis de complexidade para respostas"""
+    SIMPLE = "simple"
+    INTERMEDIATE = "intermediate"
+    DETAILED = "detailed"
+    TECHNICAL = "technical"
 
 
 class SourceInfo(BaseModel):
@@ -37,9 +46,13 @@ class LegalResponse(BaseModel):
 
 
 class LegalQuery(BaseModel):
-    question: str
-    category: Optional[str] = None
-    user_context: Optional[str] = None
+    question: str = Field(..., min_length=10, max_length=1000, description="Pergunta do usuário")
+    category: Optional[str] = Field(None, description="Categoria jurídica específica")
+    user_context: Optional[str] = Field(None, max_length=500, description="Contexto adicional do usuário")
+    complexity: ComplexityLevel = Field(
+        default=ComplexityLevel.SIMPLE,
+        description="Nível de complexidade desejado para a resposta"
+    )
 
 
 class DocumentUpload(BaseModel):
