@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
+import os
 
 
 class Settings(BaseSettings):
@@ -12,7 +13,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./direito_facil.db"
     
     # ChromaDB
-    chroma_path: str = "./chroma_db"
+    chroma_path: str = os.getenv("CHROMA_PATH", "./chroma_db")
     chroma_collection_name: str = "legal_knowledge"
     
     # LLM Configuration

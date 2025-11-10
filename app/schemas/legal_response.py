@@ -57,6 +57,6 @@ class LegalQuery(BaseModel):
 
 class DocumentUpload(BaseModel):
     title: str
-    content: str
+    source_url: str  # Obrigatório - URL para extrair conteúdo
     category: str
-    source_url: Optional[str] = None
+    content: Optional[str] = None  # Opcional - se não fornecido, será extraído da URL

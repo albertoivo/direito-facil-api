@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+import logging
 
 from app.database import get_db
 from app.schemas.legal_response import (DocumentUpload, LegalQuery,
@@ -8,6 +9,7 @@ from app.schemas.legal_response import (DocumentUpload, LegalQuery,
 from app.services.knowledge_base import KnowledgeBaseService
 from app.services.rag_service import RAGService
 
+logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Doubts"])
 
 rag_service = RAGService()
@@ -58,18 +60,34 @@ async def ask_legal_question(query: LegalQuery, db: Session = Depends(get_db)):
 @router.post("/knowledge/add")
 async def add_knowledge_document(doc: DocumentUpload):
     """
-    Adicionar documento à base de conhecimento
+    Adicionar documento à base de conhecimento.
+    O conteúdo será extraído automaticamente da source_url se não fornecido.
+    
+    Args:
+        doc: Documento com título, URL fonte, categoria e conteúdo opcional
+        
+    Returns:
+        Mensagem de sucesso e ID do documento
+        
+    Raises:
+        HTTPException 400: Se houver erro ao extrair conteúdo da URL
+        HTTPException 500: Para outros erros internos
     """
     try:
         result = await knowledge_service.add_document(
             title=doc.title,
-            content=doc.content,
-            category=doc.category,
             source_url=doc.source_url,
+            category=doc.category,
+            content=doc.content,
         )
         return {"message": "Documento adicionado com sucesso", "doc_id": result}
+    except ValueError as e:
+        # Erros de validação ou scraping
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Outros erros internos
+        logger.error(f"Erro ao adicionar documento: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
 
 
 @router.get("/categories")

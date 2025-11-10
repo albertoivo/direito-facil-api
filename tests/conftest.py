@@ -1,10 +1,16 @@
 import os
 import sys
 from pathlib import Path
+import tempfile
+import shutil
 
 # PRIMEIRA COISA: Definir ambiente de teste
 os.environ["TESTING"] = "True"
 os.environ["LOG_LEVEL"] = "ERROR"
+
+# Criar diretório temporário para ChromaDB nos testes
+test_chroma_dir = tempfile.mkdtemp(prefix="chroma_test_")
+os.environ["CHROMA_PATH"] = test_chroma_dir
 
 # Adicionar o diretório raiz ao Python path ANTES dos imports
 root_dir = Path(__file__).parent.parent
@@ -65,3 +71,10 @@ def db_session():
     finally:
         session.close()
         Base.metadata.drop_all(bind=engine)
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Cleanup após todos os testes"""
+    # Limpar diretório temporário do ChromaDB
+    if os.path.exists(test_chroma_dir):
+        shutil.rmtree(test_chroma_dir, ignore_errors=True)
