@@ -50,9 +50,9 @@ class TestPromptBuilder:
         for complexity in ComplexityLevel:
             prompt = prompt_builder.build_system_prompt(complexity)
             
-            assert "DIRETRIZES GERAIS" in prompt
-            assert "Base suas respostas" in prompt
-            assert "ESTRUTURA DA RESPOSTA" in prompt
+            assert "DIRETRIZES GERAIS OBRIGATÓRIAS" in prompt
+            assert "APENAS use informações das FONTES fornecidas" in prompt
+            assert "ESTRUTURA OBRIGATÓRIA DA RESPOSTA" in prompt
 
     def test_build_user_prompt_basic(self, prompt_builder):
         """Testa geração de prompt do usuário básico"""

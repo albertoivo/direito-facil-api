@@ -29,4 +29,4 @@ def test_openapi_schema(client: TestClient):
     assert response.status_code == 200
     data = response.json()
     assert "info" in data
-    assert data["info"]["title"] == "Direito OAuth API"
+    assert data["info"]["title"] == "Direito Fácil API"
