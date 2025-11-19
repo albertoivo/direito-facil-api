@@ -13,10 +13,10 @@ def scraper():
     return WebScraperService()
 
 
-@pytest.mark.asyncio
 class TestWebScraperService:
     """Testes para o WebScraperService"""
 
+    @pytest.mark.asyncio
     async def test_extract_content_success(self, scraper):
         """Testa extração bem-sucedida de conteúdo de uma URL"""
         html_content = """
@@ -48,6 +48,7 @@ class TestWebScraperService:
             assert "Art. 1º" in content
             assert "console.log" not in content  # Scripts devem ser removidos
 
+    @pytest.mark.asyncio
     async def test_extract_content_http_error(self, scraper):
         """Testa tratamento de erro HTTP (404, 500, etc.)"""
         mock_response = Mock()
@@ -65,6 +66,7 @@ class TestWebScraperService:
             
             assert "Erro HTTP 404" in str(exc_info.value)
 
+    @pytest.mark.asyncio
     async def test_extract_content_timeout(self, scraper):
         """Testa tratamento de timeout"""
         with patch('httpx.AsyncClient') as mock_client:
@@ -77,6 +79,7 @@ class TestWebScraperService:
             
             assert "Timeout" in str(exc_info.value)
 
+    @pytest.mark.asyncio
     async def test_extract_content_network_error(self, scraper):
         """Testa tratamento de erro de rede"""
         with patch('httpx.AsyncClient') as mock_client:
@@ -89,6 +92,7 @@ class TestWebScraperService:
             
             assert "Erro de rede" in str(exc_info.value)
 
+    @pytest.mark.asyncio
     async def test_extract_content_insufficient_content(self, scraper):
         """Testa tratamento de conteúdo insuficiente"""
         html_content = """
@@ -114,6 +118,7 @@ class TestWebScraperService:
             
             assert "Conteúdo insuficiente" in str(exc_info.value)
 
+    @pytest.mark.asyncio
     async def test_extract_content_removes_unwanted_elements(self, scraper):
         """Testa remoção de elementos indesejados (scripts, styles, nav, etc.)"""
         html_content = """
@@ -180,6 +185,7 @@ class TestWebScraperService:
         assert scraper.validate_url(123) is False
         assert scraper.validate_url([]) is False
 
+    @pytest.mark.asyncio
     async def test_extract_content_with_follow_redirects(self, scraper):
         """Testa que o scraper segue redirecionamentos"""
         html_content = """

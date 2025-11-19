@@ -193,6 +193,7 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 test.db
+tests/test.db
 logs/
 logs/
 __pycache__/

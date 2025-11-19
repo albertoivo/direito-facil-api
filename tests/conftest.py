@@ -25,8 +25,9 @@ from app.database import get_db
 from app.main import app
 from app.models.base import Base
 
-# Banco de dados em memória para testes
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+# Banco de dados de testes dentro do diretório tests
+test_db_path = Path(__file__).parent / "test.db"
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{test_db_path}"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
@@ -78,3 +79,7 @@ def pytest_sessionfinish(session, exitstatus):
     # Limpar diretório temporário do ChromaDB
     if os.path.exists(test_chroma_dir):
         shutil.rmtree(test_chroma_dir, ignore_errors=True)
+    
+    # Limpar arquivo de banco de dados de teste
+    if test_db_path.exists():
+        test_db_path.unlink()
